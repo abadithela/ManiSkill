@@ -1,7 +1,9 @@
-import numpy as np
 from pathlib import Path
 from common.logger import Logger
 from mani_skill.utils import common, gym_utils
+
+import numpy as np
+from common.logger import Logger
 from mani_skill.utils.visualization.misc import (
     images_to_video,
     tile_images,
