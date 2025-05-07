@@ -237,6 +237,14 @@ class BaseEnv(gym.Env):
             if not physx.is_gpu_enabled():
                 physx.enable_gpu()
 
+        # determine render device
+        if render_backend == "gpu" or render_backend == "cuda":
+            self._render_device = sapien.Device("cuda")
+        elif render_backend == "cpu":
+            self._render_device = sapien.Device("cpu")
+        elif render_backend[:4] == "cuda":
+            self._render_device = sapien.Device(render_backend)
+
         # raise a number of nicer errors
         if self.backend.sim_backend in CPU_SIM_BACKENDS and num_envs > 1:
             raise RuntimeError("""Cannot set the sim backend to 'cpu' and have multiple environments.
@@ -973,6 +981,7 @@ class BaseEnv(gym.Env):
                 self._batched_episode_rng = BatchedRNG.from_seeds(self._episode_seed, backend=self._batched_rng_backend)
             else:
                 self._batched_episode_rng[env_idx] = BatchedRNG.from_seeds(self._episode_seed[env_idx], backend=self._batched_rng_backend)
+            
             self._episode_rng = self._batched_episode_rng[0]
 
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
