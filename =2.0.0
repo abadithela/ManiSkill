@@ -1,0 +1,2 @@
+Looking in indexes: https://pypi.org/simple, https://pypi.ngc.nvidia.com
+Requirement already satisfied: numpy in /n/fs/irom-testing/miniconda3/envs/gdc/lib/python3.9/site-packages (1.26.4)
