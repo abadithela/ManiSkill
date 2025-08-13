@@ -735,6 +735,7 @@ class BaseEnv(gym.Env):
 
         self.scene._setup(enable_gpu=self.gpu_sim_enabled)
         # for GPU sim, we have to setup sensors after we call setup gpu in order to enable loading mounted sensors as they depend on GPU buffer data
+        
         self._setup_sensors(options)
         if self.render_mode == "human" and self._viewer is None:
             self._viewer = create_viewer(self._viewer_camera_config)
@@ -766,7 +767,7 @@ class BaseEnv(gym.Env):
 
         # Add task/external sensors
         self._sensor_configs.update(parse_camera_configs(self._default_sensor_configs))
-
+        
         # Add agent sensors
         self._agent_sensor_configs = dict()
         if self.agent is not None:
@@ -816,8 +817,8 @@ class BaseEnv(gym.Env):
                 self.scene,
                 articulation=articulation,
             )
-
         # Cameras for rendering only
+        
         self._human_render_cameras = dict()
         for uid, camera_config in self._human_render_camera_configs.items():
             self._human_render_cameras[uid] = Camera(

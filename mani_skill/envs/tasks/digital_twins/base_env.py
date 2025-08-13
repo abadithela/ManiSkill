@@ -58,12 +58,11 @@ class BaseDigitalTwinEnv(BaseEnv):
             for camera_name, path in self.rgb_overlay_paths.items():
                 if not os.path.exists(path):
                     raise FileNotFoundError(f"rgb_overlay_path {path} is not found.")
-                self._rgb_overlay_images[camera_name] = cv2.cvtColor(
+                self._rgb_overlay_images[camera_name] =  cv2.cvtColor(
                     cv2.imread(path), cv2.COLOR_BGR2RGB
-                )  # (H, W, 3); float32
+                )# (H, W, 3); float32
         else:
             self._rgb_overlay_images = None
-
         super().__init__(**kwargs)
 
     @property
@@ -73,6 +72,7 @@ class BaseDigitalTwinEnv(BaseEnv):
     @property
     def _default_human_render_camera_configs(self):
         pose = sapien_utils.look_at([0.6, 0.7, 0.6], [0.0, 0.0, 0.35])
+        pose = sapien_utils.look_at([0.0, 0.7, 0.6], [0.0, 0.0, 0.35])
         return CameraConfig(
             "render_camera", pose=pose, width=512, height=512, fov=1, near=0.01, far=100
         )
@@ -102,6 +102,7 @@ class BaseDigitalTwinEnv(BaseEnv):
         self._segmentation_ids_to_keep = torch.unique(torch.concatenate(per_scene_ids))
         self._objects_to_remove_from_greenscreen = []
 
+        print("Objects to be removed from greenscreening:", self._objects_to_remove_from_greenscreen)
         # load the overlay images
         for camera_name in self.rgb_overlay_paths.keys():
             sensor = self._sensor_configs[camera_name]
@@ -114,7 +115,7 @@ class BaseDigitalTwinEnv(BaseEnv):
                 self._rgb_overlay_images[camera_name] = common.to_tensor(
                     rgb_overlay_img, device=self.device
                 )
-
+                
     def _green_sceen_rgb(self, rgb, segmentation, overlay_img):
         """returns green screened RGB data given a batch of RGB and segmentation images and one overlay image"""
         actor_seg = segmentation[..., 0]
@@ -143,8 +144,8 @@ class BaseDigitalTwinEnv(BaseEnv):
 
     def _get_obs_sensor_data(self, apply_texture_transforms: bool = True):
         obs = super()._get_obs_sensor_data(apply_texture_transforms)
-
         # "greenscreen" process
+        # breakpoint()
         if self.rgb_overlay_mode == "none":
             return obs
         if (
@@ -156,20 +157,23 @@ class BaseDigitalTwinEnv(BaseEnv):
             for camera_name in self._rgb_overlay_images.keys():
                 # obtain overlay mask based on segmentation info
                 assert (
-                    "segmentation" in obs[camera_name].keys()
+                    "segmentation" in {key.lower() for key in obs[camera_name].keys()}
                 ), "Image overlay requires segment info in the observation!"
+                color_key = "Color" if "Color" in obs[camera_name] else "rgb"
+                segmentation_key = "Segmentation" if "Segmentation" in obs[camera_name] else "segmentation"
                 if (
                     self._rgb_overlay_images[camera_name].device
-                    != obs[camera_name]["rgb"].device
+                    != obs[camera_name][color_key].device
                 ):
                     self._rgb_overlay_images[camera_name] = self._rgb_overlay_images[
                         camera_name
-                    ].to(obs[camera_name]["rgb"].device)
+                    ].to(obs[camera_name][color_key].device)
                 overlay_img = self._rgb_overlay_images[camera_name]
+
                 green_screened_rgb = self._green_sceen_rgb(
-                    obs[camera_name]["rgb"],
-                    obs[camera_name]["segmentation"],
+                    obs[camera_name][color_key],
+                    obs[camera_name][segmentation_key],
                     overlay_img,
                 )
-                obs[camera_name]["rgb"] = green_screened_rgb
+                obs[camera_name][color_key] = green_screened_rgb
         return obs

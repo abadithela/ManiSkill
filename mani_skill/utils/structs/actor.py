@@ -275,7 +275,6 @@ class Actor(PhysxRigidDynamicComponentStruct[sapien.Entity]):
         ), "Currently you cannot fetch collision meshes of merged actors"
 
         meshes: List[trimesh.Trimesh] = []
-
         for i, actor in enumerate(self._objs):
             actor_meshes = []
             for comp in actor.components:

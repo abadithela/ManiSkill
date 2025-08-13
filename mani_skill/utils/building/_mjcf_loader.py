@@ -169,7 +169,7 @@ class MJCFLoader:
     Class to load MJCF into SAPIEN.
     """
 
-    def __init__(self, ignore_classes=["motor"], visual_groups=[0, 2]):
+    def __init__(self, ignore_classes=["motor"], visual_groups=[0, 2], scale=1.0):
         self.fix_root_link = True
         """whether to fix the root link. Note regardless of given XML, the root link is a dummy link this loader
         creates which makes a number of operations down the line easier. In general this should be False if there is a freejoint for the root body
@@ -182,7 +182,7 @@ class MJCFLoader:
         self.multiple_collisions_decomposition_params = dict()
 
         self.revolute_unwrapped = False
-        self.scale = 1.0
+        self.scale = scale
 
         self.visual_groups = visual_groups
 
@@ -408,9 +408,16 @@ class MJCFLoader:
         elif geom_type == "mesh":
             mesh_name = geom_attrib.get("mesh")
             mesh_attrib = self._meshes[mesh_name].attrib
-            mesh_scale = self.scale * np.array(
-                _parse_vec(mesh_attrib, "scale", np.array([1, 1, 1]))
-            )
+
+            if isinstance(self.scale, float):
+                mesh_scale = self.scale * np.array(
+                    _parse_vec(mesh_attrib, "scale", np.array([1, 1, 1]))
+                )
+            else:
+                mesh_scale = np.array(self.scale, dtype=np.float32) * np.array(
+                    _parse_vec(mesh_attrib, "scale", np.array([1, 1, 1]))
+                )
+            
             # TODO refquat
             mesh_file = os.path.join(self._mesh_dir, mesh_attrib["file"])
             if has_visual_body:

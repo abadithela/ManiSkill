@@ -155,11 +155,11 @@ class ManiSkillScene:
         loader.set_scene(self)
         return loader
 
-    def create_mjcf_loader(self):
+    def create_mjcf_loader(self, scale):
         """Creates a MJCFLoader object that can be used to load MJCF files into this scene"""
         from ..utils.building.mjcf_loader import MJCFLoader
 
-        loader = MJCFLoader()
+        loader = MJCFLoader(visual_groups=[0, 1, 2], scale=scale)
         loader.set_scene(self)
         return loader
 
